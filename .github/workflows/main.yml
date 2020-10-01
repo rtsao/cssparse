@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-10.15, ubuntu-18.04, windows-2019]
+        node-version: [10.x]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - uses: actions/setup-python@v2
+        if: runner.os == 'Windows'
+        with:
+          python-version: "3.8.5"
+      - run: echo "PYTHON3=$pythonLocation\python" >> $GITHUB_ENV
+        if: runner.os == 'Windows'
+        shell: bash
+      - name: Install LLVM (Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
+          scoop install llvm --global
+      - name: Setup libclang
+        run: echo "LIBCLANG_PATH=C:\ProgramData\scoop\apps\llvm\current\bin" >> $GITHUB_ENV
+        if: runner.os == 'Windows'
+        shell: bash
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm ci
+      - run: npm test
