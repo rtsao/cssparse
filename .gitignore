@@ -1,0 +1,10 @@
+native/target
+native/index.node
+native/artifacts.json
+**/*~
+
+**/*.node
+
+node_modules/
+!npm/node_modules/
+npm-debug.log

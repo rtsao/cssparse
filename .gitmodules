@@ -1,0 +1,4 @@
+[submodule "native/servo"]
+	path = native/servo
+	url = git@github.com:servo/servo.git
+	shallow = true
