@@ -2,9 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [master]
   pull_request:
-    branches: [master]
+  release:
+    types:
+      - published
 
 jobs:
   build:
@@ -41,4 +42,64 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm ci
+      - run: npm run-script build-release
+        if: github.event_name == 'release'
+      - run: npm run-script build
+        if: github.event_name != 'release'
       - run: npm test
+        if: github.event_name != 'release'
+      - name: Pack cssparse-darwin-64
+        if: matrix.os == 'macos-10.15'
+        run: npm pack
+        working-directory: npm/node_modules/cssparse-darwin-64
+      - name: Pack cssparse-linux-64
+        if: matrix.os == 'ubuntu-18.04'
+        run: npm pack
+        working-directory: npm/node_modules/cssparse-linux-64
+      - name: Pack cssparse-windows-64
+        if: matrix.os == 'windows-2019'
+        run: npm pack
+        working-directory: npm/node_modules/cssparse-windows-64
+      - name: Pack cssparse
+        if: matrix.os == 'ubuntu-18.04'
+        run: npm pack
+        working-directory: npm/node_modules/cssparse
+      - name: Upload packed npm tarballs
+        uses: actions/upload-artifact@v2
+        with:
+          name: npm-packages
+          path: npm/node_modules/*/*.tgz
+
+  publish:
+    if: github.event_name == 'release'
+    needs: [build]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Use Node.js 10.x
+        uses: actions/setup-node@v1
+        with:
+          node-version: '10.x'
+          registry-url: 'https://registry.npmjs.org'
+      - uses: actions/download-artifact@v2
+        with:
+          name: npm-packages
+      - name: publish cssparse-darwin-64
+        run: ls | xargs npm publish
+        working-directory: cssparse-darwin-64
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: publish cssparse-linux-64
+        run: ls | xargs npm publish
+        working-directory: cssparse-linux-64
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: publish cssparse-windows-64
+        run: ls | xargs npm publish
+        working-directory: cssparse-windows-64
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: publish cssparse
+        run: ls | xargs npm publish
+        working-directory: cssparse
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

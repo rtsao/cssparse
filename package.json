@@ -7,7 +7,8 @@
   },
   "scripts": {
     "test": "node npm/node_modules/test.js",
-    "postinstall": "neon build && node copy-binary.js"
+    "build": "neon build && node copy-binary.js",
+    "build-release": "neon build --release && node copy-binary.js"
   },
   "license": "MIT"
 }
