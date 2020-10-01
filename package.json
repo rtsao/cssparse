@@ -1,0 +1,13 @@
+{
+  "name": "cssparse-monorepo",
+  "private": true,
+  "version": "0.0.0-monorepo",
+  "dependencies": {
+    "neon-cli": "^0.4.2"
+  },
+  "scripts": {
+    "test": "node npm/node_modules/test.js",
+    "postinstall": "neon build && node copy-binary.js"
+  },
+  "license": "MIT"
+}
